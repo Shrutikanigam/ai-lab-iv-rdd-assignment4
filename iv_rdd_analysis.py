@@ -48,8 +48,56 @@ fund_df = dfs[2]
 
 master_df = infra_df.merge(metrics_df, on="TEAM_REF").merge(fund_df, on="TEAM_REF")
 
+master_df = master_df.loc[:, ~master_df.columns.duplicated()]
+master_df["TEAM_REF"] = master_df["TEAM_REF"].astype(str).str.strip()
+
 print(master_df.head())
 print(master_df.columns)
 
 master_df.to_csv("raw_master_data.csv", index=False)
 print("Saved raw_master_data.csv")
+
+
+
+# Copilot Prompt:
+# "Clean messy numeric fields by removing text like km, thousand, commas, and convert to float"
+import numpy as np
+import re
+# define columns first
+clean_cols = [
+    "DISTANCE_TO_NODE",
+    "AI_INTENSITY",
+    "INNOVATION_SCORE",
+    "ELIGIBILITY_SCORE"
+]
+def clean_numeric(val):
+    if pd.isna(val):
+        return np.nan
+
+    val = str(val).lower()
+    val = val.replace(",", "")
+    val = val.replace("~", "")
+
+    if "thousand" in val or "k" in val:
+        match = re.findall(r"\d+\.?\d*", val)
+        if match:
+            return float(match[0]) * 1000
+        return np.nan
+
+    match = re.findall(r"\d+\.?\d*", val)
+    if match:
+        return float(match[0])
+
+    return np.nan
+
+
+for col in clean_cols:
+    master_df[col] = master_df[col].apply(clean_numeric)
+
+master_df[clean_cols] = master_df[clean_cols].astype(float)
+
+print(master_df[clean_cols].head())
+print(master_df[clean_cols].dtypes)
+
+master_df.to_csv("cleaned_master_data.csv", index=False)
+print("Saved cleaned_master_data.csv")
