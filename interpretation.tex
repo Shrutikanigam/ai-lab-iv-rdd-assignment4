@@ -1,0 +1,22 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+
+\setstretch{1.5}
+
+\begin{document}
+
+\section*{Interpretation}
+
+The naive OLS regression estimated a small positive relationship between AI intensity and innovation score, with a coefficient of 0.000021. However, this estimate was not statistically significant ($p = 0.574$), suggesting that the simple observed relationship between AI adoption and innovation is weak. This naive estimate is likely biased by endogeneity, since firms that are already more innovative may also be more likely to adopt AI.
+
+To address this issue, I used distance to fiber infrastructure as an instrumental variable for AI intensity. In the first stage, distance to node had the expected negative sign ($\beta = -3.77$), implying that firms located farther from fiber infrastructure tended to have lower AI intensity. However, this relationship was not statistically significant ($p = 0.640$), and the first-stage F-statistic was only 0.22, which indicates a weak instrument. This weak relevance reduces confidence in the strength of the IV design.
+
+In the second-stage IV regression, predicted AI intensity had a positive coefficient of 0.0006, suggesting that higher AI adoption may increase innovation. However, this estimate was also statistically insignificant ($p = 0.403$), so the causal effect remains suggestive rather than conclusive.
+
+The RDD plot around the eligibility score cutoff of 85 did not show a strong discontinuity in innovation outcomes, suggesting limited visual evidence of a sharp treatment effect. The density plot also showed no clear bunching around the threshold, which supports the continuity assumption and suggests limited manipulation of eligibility scores.
+
+A reasonable exclusion restriction is that distance to fiber infrastructure affects innovation mainly through digital access and AI adoption rather than directly changing firm creativity. From a policy perspective, digital infrastructure likely supports innovation, but these findings suggest infrastructure alone is not sufficient without complementary firm capabilities, implementation capacity, and readiness to adopt AI effectively.
+
+\end{document}
