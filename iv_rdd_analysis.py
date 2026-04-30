@@ -101,3 +101,73 @@ print(master_df[clean_cols].dtypes)
 
 master_df.to_csv("cleaned_master_data.csv", index=False)
 print("Saved cleaned_master_data.csv")
+# Copilot Prompt:
+# "Cap outliers in AI intensity and innovation score using the IQR rule"
+
+def cap_outliers(series):
+    q1 = series.quantile(0.25)
+    q3 = series.quantile(0.75)
+    iqr = q3 - q1
+
+    lower = q1 - 1.5 * iqr
+    upper = q3 + 1.5 * iqr
+
+    return series.clip(lower=lower, upper=upper)
+
+master_df["AI_INTENSITY"] = cap_outliers(master_df["AI_INTENSITY"])
+master_df["INNOVATION_SCORE"] = cap_outliers(master_df["INNOVATION_SCORE"])
+
+print(master_df[["AI_INTENSITY", "INNOVATION_SCORE"]].describe())
+
+# Copilot Prompt:
+# "Run naive OLS, IV first stage, IV second stage, and RDD analysis"
+
+import statsmodels.formula.api as smf
+import matplotlib.pyplot as plt
+
+# 1. Naive OLS
+ols_model = smf.ols("INNOVATION_SCORE ~ AI_INTENSITY", data=master_df).fit()
+print("\nNaive OLS Results")
+print(ols_model.summary())
+
+
+# 2. IV Analysis — First Stage
+first_stage = smf.ols("AI_INTENSITY ~ DISTANCE_TO_NODE", data=master_df).fit()
+print("\nFirst Stage Results")
+print(first_stage.summary())
+
+
+# Create predicted AI from first stage
+master_df["predicted_ai"] = first_stage.fittedvalues
+
+
+# 3. IV Analysis — Second Stage (manual 2SLS)
+second_stage = smf.ols("INNOVATION_SCORE ~ predicted_ai", data=master_df).fit()
+print("\nSecond Stage (2SLS) Results")
+print(second_stage.summary())
+
+
+# 4. RDD setup
+cutoff = 85
+master_df["eligible"] = (master_df["ELIGIBILITY_SCORE"] >= cutoff).astype(int)
+
+
+# 5. RDD Plot
+plt.figure(figsize=(8,5))
+plt.scatter(master_df["ELIGIBILITY_SCORE"], master_df["INNOVATION_SCORE"], alpha=0.7)
+plt.axvline(cutoff, linestyle="--")
+plt.xlabel("Eligibility Score")
+plt.ylabel("Innovation Score")
+plt.title("RDD Plot: Innovation vs Eligibility Score")
+plt.savefig("rdd_plot.png")
+plt.show()
+
+
+# 6. Density Plot (continuity check)
+plt.figure(figsize=(8,5))
+master_df["ELIGIBILITY_SCORE"].plot(kind="hist", bins=15)
+plt.axvline(cutoff, linestyle="--")
+plt.xlabel("Eligibility Score")
+plt.title("Density Check Around RDD Cutoff")
+plt.savefig("rdd_density_plot.png")
+plt.show()
